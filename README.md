@@ -2,7 +2,7 @@
 
 Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQL, Sequelize y migraciones. Producción: frontend en Vercel, API en Render y base de datos en Supabase. Ningún dato personal se guarda legible en la base: el correo se busca mediante un índice ciego HMAC-SHA256 (`email_hash`). Usa sesiones de servidor, dos roles, cifrado autenticado (AES-256-GCM) para nombre, correo, título y contenido de notas, teléfono y datos de sesión, recuperación por correo y una bitácora de seguridad.
 
-**Estado:** implementación y comprobaciones locales parciales. Migraciones up/down/up y las 5 pruebas (incluida la de integración) pasaron contra PostgreSQL 16 local. Ver `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md` antes de usarla. No usar como producto real hasta completar y revisar esas pruebas.
+**Estado:** desplegada en producción (Vercel + Render + Supabase). Lint, migraciones up/down/up, las 6 pruebas (incluida la de integración y la que comprueba que la base no guarda datos legibles), build y `npm audit` pasan en GitHub Actions con PostgreSQL 16. Pendientes y riesgos residuales en `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md`.
 
 ## Enlaces para revisión
 
