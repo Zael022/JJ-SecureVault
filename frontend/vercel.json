@@ -5,8 +5,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://RENDER_BACKEND_URL/api/:path*" },
-    { "source": "/health", "destination": "https://RENDER_BACKEND_URL/health" },
+    { "source": "/api/:path*", "destination": "https://jj-securevault-api.onrender.com/api/:path*" },
+    { "source": "/health", "destination": "https://jj-securevault-api.onrender.com/health" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
   "headers": [

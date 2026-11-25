@@ -121,7 +121,7 @@ Arquitectura: Navegador → Vercel (HTTPS, frontend React + cabeceras de segurid
 - Render reinicia el proceso automáticamente si falla. El plan gratuito se duerme por inactividad: abrir `/health` antes de la demostración.
 
 ### Vercel (frontend)
-- Root Directory: `frontend` (Vite). `frontend/vercel.json` define el rewrite hacia Render, el fallback de la SPA y las cabeceras (CSP, HSTS, etc.). Reemplazar `RENDER_BACKEND_URL` por el dominio de Render.
+- Root Directory: `frontend` (Vite). `frontend/vercel.json` define el rewrite hacia Render, el fallback de la SPA y las cabeceras (CSP, HSTS, etc.). Reemplazar `jj-securevault-api.onrender.com` por el dominio de Render.
 
 ### Correo de recuperación (limitación)
 El despliegue usa solo Render, Vercel y Supabase. Render gratis bloquea los puertos SMTP, por lo que en producción el token de recuperación se genera y se guarda como hash SHA-256 con expiración de 15 minutos, pero el correo no se envía y se registra el evento `reset_email_unavailable` sin incluir el token. El código admite un proveedor por API HTTPS (`BREVO_API_KEY`, `MAIL_FROM`) si se quisiera activar el envío. Se documenta como riesgo residual.
