@@ -1,0 +1,5 @@
+// Valida las entradas de la API antes de ejecutar la lógica de negocio.
+const { z } = require('zod');
+const password = z.string().min(12, 'Debe tener al menos 12 caracteres').regex(/[a-z]/, 'Incluya minúsculas').regex(/[A-Z]/, 'Incluya mayúsculas').regex(/[0-9]/, 'Incluya números').regex(/[^A-Za-z0-9]/, 'Incluya un símbolo').refine(v => Buffer.byteLength(v, 'utf8') <= 72, 'Máximo 72 bytes');
+const email = z.string().trim().email().max(254).transform(v => v.toLowerCase());
+module.exports = { register: z.object({ name: z.string().trim().min(1).max(100), email, password }).strict(), login: z.object({ email, password: z.string().refine(v => Buffer.byteLength(v, 'utf8') <= 72, 'Máximo 72 bytes') }).strict(), forgot: z.object({ email }).strict(), reset: z.object({ token: z.string().regex(/^[a-f0-9]{64}$/), password }).strict(), note: z.object({ title: z.string().trim().min(1).max(150), content: z.string().min(1).max(10000) }).strict(), phone: z.object({ phone: z.string().trim().regex(/^\+?[0-9 ]{7,20}$/) }).strict(), role: z.object({ role: z.enum(['usuario','administrador']) }).strict() };

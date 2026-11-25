@@ -1,0 +1,42 @@
+# Valida el proyecto y deja el despliegue para una integración configurada.
+name: Comprobaciones
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: test-only-password
+          MYSQL_DATABASE: securevault_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -ptest-only-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: securevault_test
+      DB_USER: root
+      DB_PASSWORD: test-only-password
+      SESSION_SECRET: ci-session-secret-not-for-production-32-bytes
+      ENCRYPTION_KEY_BASE64: BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
+      MYSQL_TEST: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --prefix backend
+      - run: npm ci --prefix frontend
+      - run: npm run lint --prefix backend
+      - run: npm run lint --prefix frontend
+      - run: npm run migrate --prefix backend
+      - run: npm run migrate:undo --prefix backend
+      - run: npm run migrate --prefix backend
+      - run: npm test --prefix backend
+      - run: npm run build --prefix frontend
+      - run: npm audit --prefix backend --audit-level=high
+      - run: npm audit --prefix frontend --audit-level=high

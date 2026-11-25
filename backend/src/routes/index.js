@@ -1,0 +1,26 @@
+// Agrupa las rutas de autenticación, notas, perfil y administración.
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const controller = require('../controllers/api');
+const s = require('../validators/schemas');
+const { wrap, validate, csrf, requireUser, requireAdmin } = require('../middlewares/security');
+const router = express.Router();
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false, handler: (req, res) => res.status(429).json({ ok: false, error: { message: 'Demasiadas solicitudes. Inténtelo más tarde.' } }) });
+router.get('/auth/csrf', controller.csrf);
+router.post('/auth/register', limiter, csrf, validate(s.register), wrap(controller.register));
+router.post('/auth/login', limiter, csrf, validate(s.login), wrap(controller.login));
+router.post('/auth/logout', requireUser, csrf, wrap(controller.logout));
+router.get('/auth/me', requireUser, wrap(controller.me));
+router.post('/auth/forgot-password', limiter, csrf, validate(s.forgot), wrap(controller.forgot));
+router.post('/auth/reset-password', limiter, csrf, validate(s.reset), wrap(controller.reset));
+router.get('/notes', requireUser, wrap(controller.notes));
+router.post('/notes', requireUser, csrf, validate(s.note), wrap(controller.createNote));
+router.get('/notes/:id', requireUser, wrap(controller.note));
+router.put('/notes/:id', requireUser, csrf, validate(s.note), wrap(controller.editNote));
+router.delete('/notes/:id', requireUser, csrf, wrap(controller.deleteNote));
+router.get('/profile', requireUser, wrap(controller.profile));
+router.put('/profile/phone', requireUser, csrf, validate(s.phone), wrap(controller.phone));
+router.get('/admin/users', requireUser, requireAdmin, wrap(controller.users));
+router.patch('/admin/users/:id/role', requireUser, requireAdmin, csrf, validate(s.role), wrap(controller.role));
+router.get('/admin/security-events', requireUser, requireAdmin, wrap(controller.events));
+module.exports = router;
