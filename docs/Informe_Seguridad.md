@@ -15,6 +15,30 @@ Estado: desplegado en producción (frontend en Vercel `https://jj-securevault.ve
 | A09 Logs y alertas | `services/business.js`, `models/index.js`, `app.js` | Eventos en base y logs JSON; alerta local tras cinco fallos para cuenta existente. Alerta externa y pruebas de retención pendientes. |
 | A10 Condiciones excepcionales | `app.js` y `server.js` | Errores públicos genéricos, timeouts HTTP y cierre controlado. Falta prueba de excepción simulada en integración y análisis de monitoreo en producción. |
 
+## Enlaces para revisión
+
+**Aplicación**
+- App en producción: https://jj-securevault.vercel.app
+- Estado de la API: https://jj-securevault-api.onrender.com/health (plan gratuito: la primera respuesta puede tardar ~50 s)
+
+**Repositorio y CI/CD**
+- Repositorio: https://github.com/Zael022/JJ-SecureVault
+- Historial de commits: https://github.com/Zael022/JJ-SecureVault/commits/main
+- Pipeline de CI (GitHub Actions): https://github.com/Zael022/JJ-SecureVault/actions
+
+**Documentos**
+- README: https://github.com/Zael022/JJ-SecureVault/blob/main/README.md
+- Informe de seguridad: https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Informe_Seguridad.md
+- Resultados de verificación: https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Resultados_Verificacion.md
+- Informe de Deep Research (Fase 0): https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Investigacion_Despliegue_JJ_SecureVault.pdf
+- Guion de la demostración: https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Guion_Demostracion_10_Minutos.md
+
+**Revisiones de seguridad externas**
+- Cabeceras (securityheaders.com): https://securityheaders.com/?q=https%3A%2F%2Fjj-securevault.vercel.app&followRedirects=on
+- TLS/SSL (SSL Labs): https://www.ssllabs.com/ssltest/analyze.html?d=jj-securevault.vercel.app
+
+Los paneles de Render y Supabase son privados; su configuración y los datos cifrados se muestran en la demostración. Las credenciales de prueba (usuario y administrador) se entregan al docente por un canal privado, no en este repositorio.
+
 ## Flujo de datos
 
 Navegador → Vercel (HTTPS, React y cabeceras de seguridad) → rewrite de `/api` → Render (API Express) → Supabase (PostgreSQL por TLS). Como el navegador solo habla con el dominio de Vercel, la cookie de sesión es de primer origen. No hay proveedor de correo en producción (Render gratis bloquea SMTP). El navegador recibe cookies de sesión HttpOnly; las operaciones de cambio incluyen un token CSRF. En desarrollo, Vite redirige las llamadas API al backend.

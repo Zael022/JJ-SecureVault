@@ -4,6 +4,30 @@ Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQ
 
 **Estado:** implementación y comprobaciones locales parciales. Migraciones up/down/up y las 5 pruebas (incluida la de integración) pasaron contra PostgreSQL 16 local. Ver `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md` antes de usarla. No usar como producto real hasta completar y revisar esas pruebas.
 
+## Enlaces para revisión
+
+**Aplicación**
+- App en producción: https://jj-securevault.vercel.app
+- Estado de la API: https://jj-securevault-api.onrender.com/health (plan gratuito: la primera respuesta puede tardar ~50 s)
+
+**Repositorio y CI/CD**
+- Repositorio: https://github.com/Zael022/JJ-SecureVault
+- Historial de commits: https://github.com/Zael022/JJ-SecureVault/commits/main
+- Pipeline de CI (GitHub Actions): https://github.com/Zael022/JJ-SecureVault/actions
+
+**Documentos**
+- README: https://github.com/Zael022/JJ-SecureVault/blob/main/README.md
+- Informe de seguridad: https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Informe_Seguridad.md
+- Resultados de verificación: https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Resultados_Verificacion.md
+- Informe de Deep Research (Fase 0): https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Investigacion_Despliegue_JJ_SecureVault.pdf
+- Guion de la demostración: https://github.com/Zael022/JJ-SecureVault/blob/main/docs/Guion_Demostracion_10_Minutos.md
+
+**Revisiones de seguridad externas**
+- Cabeceras (securityheaders.com): https://securityheaders.com/?q=https%3A%2F%2Fjj-securevault.vercel.app&followRedirects=on
+- TLS/SSL (SSL Labs): https://www.ssllabs.com/ssltest/analyze.html?d=jj-securevault.vercel.app
+
+Los paneles de Render y Supabase son privados; su configuración y los datos cifrados se muestran en la demostración. Las credenciales de prueba (usuario y administrador) se entregan al docente por un canal privado, no en este repositorio.
+
 ## 1. Requisitos para Windows
 
 - Windows 10/11, PowerShell, VS Code, Git y Node.js 24 LTS con npm.
