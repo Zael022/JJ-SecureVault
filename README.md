@@ -1,6 +1,6 @@
 # J.J — SecureVault
 
-Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQL, Sequelize y migraciones. Producción: frontend en Vercel, API en Render, base de datos en Supabase y correo por la API de Brevo. Usa sesiones de servidor, dos roles, cifrado autenticado para notas y teléfono, recuperación por correo y una bitácora de seguridad.
+Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQL, Sequelize y migraciones. Producción: frontend en Vercel, API en Render y base de datos en Supabase. Usa sesiones de servidor, dos roles, cifrado autenticado para notas y teléfono, recuperación por correo y una bitácora de seguridad.
 
 **Estado:** implementación y comprobaciones locales parciales. Migraciones up/down/up y las 5 pruebas (incluida la de integración) pasaron contra PostgreSQL 16 local. Ver `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md` antes de usarla. No usar como producto real hasta completar y revisar esas pruebas.
 
@@ -116,15 +116,15 @@ Arquitectura: Navegador → Vercel (HTTPS, frontend React + cabeceras de segurid
 
 ### Render (API)
 - Root Directory: `backend` · Build: `npm ci && npm run migrate` · Start: `npm start` · Health check: `/health`.
-- Variables (solo nombres): `NODE_ENV=production`, `TRUST_PROXY`, `APP_URL`, `FRONTEND_ORIGIN`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL_CA`, `SESSION_SECRET`, `ENCRYPTION_KEY_BASE64`, `KEY_VERSION`, `BREVO_API_KEY`, `MAIL_FROM`, `MAIL_FROM_NAME`.
+- Variables (solo nombres): `NODE_ENV=production`, `TRUST_PROXY`, `APP_URL`, `FRONTEND_ORIGIN`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL_CA`, `SESSION_SECRET`, `ENCRYPTION_KEY_BASE64`, `KEY_VERSION`.
 - `APP_URL` y `FRONTEND_ORIGIN` son la URL de Vercel. Crear el primer administrador con `npm run admin` desde una terminal local apuntando temporalmente a la base de producción.
 - Render reinicia el proceso automáticamente si falla. El plan gratuito se duerme por inactividad: abrir `/health` antes de la demostración.
 
 ### Vercel (frontend)
 - Root Directory: `frontend` (Vite). `frontend/vercel.json` define el rewrite hacia Render, el fallback de la SPA y las cabeceras (CSP, HSTS, etc.). Reemplazar `RENDER_BACKEND_URL` por el dominio de Render.
 
-### Brevo (correo)
-- Crear una clave API y verificar el remitente usado en `MAIL_FROM`.
+### Correo de recuperación (limitación)
+El despliegue usa solo Render, Vercel y Supabase. Render gratis bloquea los puertos SMTP, por lo que en producción el token de recuperación se genera y se guarda como hash SHA-256 con expiración de 15 minutos, pero el correo no se envía y se registra el evento `reset_email_unavailable` sin incluir el token. El código admite un proveedor por API HTTPS (`BREVO_API_KEY`, `MAIL_FROM`) si se quisiera activar el envío. Se documenta como riesgo residual.
 
 ### CI
 `.github/workflows/ci.yml` ejecuta instalación, lint, migraciones up/down/up, pruebas, build y `npm audit` con PostgreSQL 16. Vercel y Render despliegan desde la rama principal; activar en Render **Auto-Deploy: After CI Checks Pass** para no publicar commits sin validar.

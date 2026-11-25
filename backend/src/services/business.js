@@ -20,7 +20,7 @@ async function login(input) {
 // Envía el correo por la API HTTPS de Brevo (Render gratis bloquea los puertos SMTP).
 async function sendResetEmail(to, url) {
  const text = `El enlace vence en 15 minutos. Si no solicitó este cambio, ignore este mensaje: ${url}`;
- if (!process.env.BREVO_API_KEY) { if (process.env.NODE_ENV === 'production') throw new Error('Falta BREVO_API_KEY'); if (process.env.NODE_ENV !== 'test') console.warn(JSON.stringify({ level: 'warn', event: 'reset_email_dev', note: 'Sin BREVO_API_KEY: enlace mostrado solo en desarrollo', url })); return; }
+ if (!process.env.BREVO_API_KEY) { if (process.env.NODE_ENV === 'production') { console.warn(JSON.stringify({ level: 'warn', event: 'reset_email_unavailable', note: 'Sin proveedor de correo configurado; el token se generó pero no se envió' })); return; } if (process.env.NODE_ENV !== 'test') console.warn(JSON.stringify({ level: 'warn', event: 'reset_email_dev', note: 'Sin BREVO_API_KEY: enlace mostrado solo en desarrollo', url })); return; }
  const res = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ sender: { name: process.env.MAIL_FROM_NAME || 'SecureVault', email: process.env.MAIL_FROM }, to: [{ email: to }], subject: 'Recuperar acceso a SecureVault', textContent: text }), signal: AbortSignal.timeout(10000) });
  if (!res.ok) throw Object.assign(new Error('No se pudo enviar el correo'), { code: `BREVO_${res.status}` });
 }
