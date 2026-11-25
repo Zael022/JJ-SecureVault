@@ -1,11 +1,11 @@
-// Verifica autorización de notas y cierre de sesión con MySQL de prueba.
+// Verifica autorización de notas y cierre de sesión con PostgreSQL de prueba.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 process.env.NODE_ENV = 'test';
 const request = require('supertest');
 const app = require('../src/app');
 const { sequelize, User } = require('../src/models');
-const integration = process.env.MYSQL_TEST === '1' ? test : test.skip;
+const integration = process.env.DB_TEST === '1' ? test : test.skip;
 integration('dos usuarios no pueden acceder a notas ajenas y logout invalida la cookie', async () => {
  const suffix = Date.now(); const users = [`a${suffix}@example.test`, `b${suffix}@example.test`];
  const one = request.agent(app); const two = request.agent(app);

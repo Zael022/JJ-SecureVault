@@ -2,7 +2,7 @@
 
 - Conservar los cambios del equipo y revisar el estado del repositorio antes de editar.
 - No añadir carpetas nuevas a la raíz de `frontend/src` o `backend/src`.
-- Usar React y JSX; Express, MySQL, Sequelize y migraciones; no usar `sequelize.sync()`.
+- Usar React y JSX; Express, PostgreSQL, Sequelize y migraciones; no usar `sequelize.sync()`.
 - Crear cambios de base mediante migraciones reversibles y reflejarlos en modelos.
 - Mantener controladores delgados, validación en validators y lógica en services.
 - Validar el propietario en las consultas de lectura, edición y borrado de notas.

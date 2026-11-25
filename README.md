@@ -1,35 +1,34 @@
 # J.J — SecureVault
 
-Aplicación universitaria de notas privadas con React + Vite, Express, MySQL, Sequelize y migraciones. Usa sesiones de servidor, dos roles, cifrado autenticado para notas y teléfono, recuperación por correo y una bitácora de seguridad.
+Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQL, Sequelize y migraciones. Producción: frontend en Vercel, API en Render, base de datos en Supabase y correo por la API de Brevo. Usa sesiones de servidor, dos roles, cifrado autenticado para notas y teléfono, recuperación por correo y una bitácora de seguridad.
 
-**Estado:** implementación y comprobaciones locales parciales. No se ha desplegado ni se han ejecutado las pruebas con MySQL real en el entorno de creación. Ver `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md` antes de usarla. No usar como producto real hasta completar y revisar esas pruebas.
+**Estado:** implementación y comprobaciones locales parciales. Migraciones up/down/up y las 5 pruebas (incluida la de integración) pasaron contra PostgreSQL 16 local. Ver `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md` antes de usarla. No usar como producto real hasta completar y revisar esas pruebas.
 
 ## 1. Requisitos para Windows
 
 - Windows 10/11, PowerShell, VS Code, Git y Node.js 24 LTS con npm.
-- MySQL Server 8.0 o 8.4 instalado y ejecutándose; cliente `mysql` accesible en PowerShell.
-- Opcional: Mailpit para recibir correos de prueba localmente; configurar SMTP en `backend/.env`. En producción, usar un proveedor SMTP que permita entrega a usuarios reales.
+- PostgreSQL 16 instalado y ejecutándose (incluye `psql` y pgAdmin).
+- Correo: en desarrollo, si `BREVO_API_KEY` está vacío, el enlace de recuperación se muestra en la consola del backend. En producción se usa la API HTTPS de Brevo (Render gratis bloquea los puertos SMTP).
 
 Abrí el ZIP en una carpeta y, en PowerShell, entrá en la carpeta raíz `JJ-SecureVault`. En todos los comandos siguientes se indica la carpeta de ejecución. No incluir datos personales reales en el laboratorio.
 
-## 2. Crear la base y el usuario de MySQL
+## 2. Crear la base y el usuario de PostgreSQL
 
-Desde PowerShell, iniciá el cliente MySQL como administrador:
+Desde PowerShell, abrí `psql` como el usuario administrador `postgres`:
 
 ```powershell
-mysql -u root -p
+psql -U postgres
 ```
 
-Dentro del cliente MySQL, creá una contraseña propia y reemplazá `TU_CLAVE_LOCAL` antes de ejecutar:
+Dentro de `psql`, reemplazá `TU_CLAVE_LOCAL` antes de ejecutar:
 
 ```sql
-CREATE DATABASE securevault CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'securevault_app'@'localhost' IDENTIFIED BY 'TU_CLAVE_LOCAL';
-GRANT ALL PRIVILEGES ON securevault.* TO 'securevault_app'@'localhost';
-EXIT;
+CREATE USER securevault_app WITH PASSWORD 'TU_CLAVE_LOCAL';
+CREATE DATABASE securevault OWNER securevault_app;
+\q
 ```
 
-El privilegio anterior se usa para ejecutar migraciones en el laboratorio. Para producción, separar el usuario que migra del usuario de la aplicación y otorgar solo los permisos necesarios. La contraseña no debe subirse al repositorio.
+La contraseña no debe subirse al repositorio.
 
 ## 3. Configurar secretos locales
 
@@ -42,7 +41,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 code backend\.env
 ```
 
-Copiá el primer valor en `ENCRYPTION_KEY_BASE64` y el segundo en `SESSION_SECRET`. Completá `DB_PASSWORD` con la contraseña local y `SMTP_FROM` con una dirección de prueba. Para Mailpit, los valores de ejemplo usan SMTP en `localhost:1025`; arrancá Mailpit por separado y consultá su interfaz web para leer el correo. La configuración del servidor SMTP es necesaria para recuperar contraseñas. No compartás `.env`.
+Copiá el primer valor en `ENCRYPTION_KEY_BASE64` y el segundo en `SESSION_SECRET`. Completá `DB_PASSWORD` con la contraseña local. `BREVO_API_KEY` puede quedar vacío en desarrollo. No compartás `.env`.
 
 Si se pierde la llave de cifrado, no se pueden recuperar las notas y teléfonos ya cifrados. Resguardá una copia segura fuera del repositorio. Para una futura rotación deben mantenerse temporalmente las llaves antiguas y volver a cifrar los registros con la nueva: esta rotación no está implementada.
 
@@ -94,12 +93,12 @@ La prueba de integración requiere una **base de prueba vacía y separada**, con
 
 ```powershell
 $env:DB_NAME = 'securevault_test'
-$env:MYSQL_TEST = '1'
+$env:DB_TEST = '1'
 npm run migrate
 npm run migrate:undo
 npm run migrate
 npm test
-Remove-Item Env:MYSQL_TEST
+Remove-Item Env:DB_TEST
 Remove-Item Env:DB_NAME
 ```
 
@@ -107,8 +106,27 @@ Crear antes `securevault_test` y dar acceso al usuario de prueba. **`migrate:und
 
 ## 7. Producción y CI
 
-Construir frontend con `npm ci` y `npm run build` en `frontend`, instalar backend con `npm ci`, ejecutar migraciones y arrancar `npm start` en `backend`. Express sirve `frontend/dist` y la API bajo un mismo origen. Configurar `NODE_ENV=production`, puerto, `APP_URL`, MySQL, claves, correo y `TRUST_PROXY` según el proxy real. Para verificar TLS de MySQL, `DB_SSL_CA` puede contener el certificado CA PEM y el servidor debe aceptar TLS. Restringir la red y proteger secretos mediante el servicio de la plataforma.
+Arquitectura: Navegador → Vercel (HTTPS, frontend React + cabeceras de seguridad) → rewrite `/api/*` y `/health` → Render (API Express) → Supabase (PostgreSQL con TLS). Como el navegador solo habla con el dominio de Vercel, la cookie de sesión es de primer origen (`HttpOnly`, `Secure`, `SameSite=Lax`).
 
-`.github/workflows/ci.yml` ejecuta instalación, lint, migraciones, pruebas, build y auditoría en GitHub Actions con MySQL de prueba. **No incluye despliegue:** hay que configurar una integración de publicación que dependa de que CI pase y evitar que la plataforma publique commits sin validar. Este proyecto no contiene cuenta de hosting, URL, credenciales, historial Git, ni evidencias de producción.
+### Supabase (base de datos)
+1. Crear un proyecto y guardar la contraseña de la base en un gestor seguro.
+2. En **Connect**, copiar los datos del **Session pooler** (no la conexión directa, que es IPv6): host, puerto `5432`, usuario `postgres.<ref>` y base `postgres`.
+3. En **Database Settings → SSL Configuration**, descargar el certificado CA y activar **Enforce SSL**.
+4. Los proyectos gratuitos se pausan tras 7 días sin actividad: entrar al panel durante la evaluación.
 
-Para la evaluación se debe confirmar HTTPS, redirección, TLS 1.2/1.3, cabeceras, disponibilidad, respaldos, correo, manejo de secretos, `trust proxy` y reconexión a la base. Compartir credenciales de evaluación exclusivamente por un canal privado.
+### Render (API)
+- Root Directory: `backend` · Build: `npm ci && npm run migrate` · Start: `npm start` · Health check: `/health`.
+- Variables (solo nombres): `NODE_ENV=production`, `TRUST_PROXY`, `APP_URL`, `FRONTEND_ORIGIN`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL_CA`, `SESSION_SECRET`, `ENCRYPTION_KEY_BASE64`, `KEY_VERSION`, `BREVO_API_KEY`, `MAIL_FROM`, `MAIL_FROM_NAME`.
+- `APP_URL` y `FRONTEND_ORIGIN` son la URL de Vercel. Crear el primer administrador con `npm run admin` desde una terminal local apuntando temporalmente a la base de producción.
+- Render reinicia el proceso automáticamente si falla. El plan gratuito se duerme por inactividad: abrir `/health` antes de la demostración.
+
+### Vercel (frontend)
+- Root Directory: `frontend` (Vite). `frontend/vercel.json` define el rewrite hacia Render, el fallback de la SPA y las cabeceras (CSP, HSTS, etc.). Reemplazar `RENDER_BACKEND_URL` por el dominio de Render.
+
+### Brevo (correo)
+- Crear una clave API y verificar el remitente usado en `MAIL_FROM`.
+
+### CI
+`.github/workflows/ci.yml` ejecuta instalación, lint, migraciones up/down/up, pruebas, build y `npm audit` con PostgreSQL 16. Vercel y Render despliegan desde la rama principal; activar en Render **Auto-Deploy: After CI Checks Pass** para no publicar commits sin validar.
+
+Compartir credenciales de evaluación exclusivamente por un canal privado.

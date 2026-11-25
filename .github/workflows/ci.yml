@@ -5,25 +5,26 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      mysql:
-        image: mysql:8.4
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_ROOT_PASSWORD: test-only-password
-          MYSQL_DATABASE: securevault_test
-        ports: ['3306:3306']
+          POSTGRES_USER: svtest
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: securevault_test
+        ports: ['5432:5432']
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -ptest-only-password"
+          --health-cmd="pg_isready -U svtest"
           --health-interval=10s --health-timeout=5s --health-retries=10
     env:
       NODE_ENV: test
       DB_HOST: 127.0.0.1
-      DB_PORT: 3306
+      DB_PORT: 5432
       DB_NAME: securevault_test
-      DB_USER: root
+      DB_USER: svtest
       DB_PASSWORD: test-only-password
       SESSION_SECRET: ci-session-secret-not-for-production-32-bytes
       ENCRYPTION_KEY_BASE64: BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
-      MYSQL_TEST: '1'
+      DB_TEST: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
