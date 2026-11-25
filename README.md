@@ -8,7 +8,7 @@ Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQ
 
 - Windows 10/11, PowerShell, VS Code, Git y Node.js 24 LTS con npm.
 - PostgreSQL 16 instalado y ejecutándose (incluye `psql` y pgAdmin).
-- Correo: en desarrollo, si `BREVO_API_KEY` está vacío, el enlace de recuperación se muestra en la consola del backend. En producción se usa la API HTTPS de Brevo (Render gratis bloquea los puertos SMTP).
+- Correo: en desarrollo, si `BREVO_API_KEY` está vacío, el enlace de recuperación se muestra en la consola del backend. En producción no hay proveedor de correo configurado (ver «Correo de recuperación (limitación)»).
 
 Abrí el ZIP en una carpeta y, en PowerShell, entrá en la carpeta raíz `JJ-SecureVault`. En todos los comandos siguientes se indica la carpeta de ejecución. No incluir datos personales reales en el laboratorio.
 
