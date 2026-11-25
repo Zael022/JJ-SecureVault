@@ -3,13 +3,13 @@ const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const { sequelize, User, Note, Session, ResetToken, SecurityEvent } = require('../models');
-const { encrypt, decrypt, hashToken } = require('./crypto');
+const { encrypt, decrypt, hashToken, blindIndex } = require('./crypto');
 const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: u.role });
 const event = (userId, eventType, result, details) => SecurityEvent.create({ userId, eventType, result, details });
 const fail = (status, message) => Object.assign(new Error(message), { status });
 async function register(input) { try { const user = await User.create({ name: input.name, email: input.email, passwordHash: await bcrypt.hash(input.password, 12), role: 'usuario' }); return publicUser(user); } catch (e) { if (e.name === 'SequelizeUniqueConstraintError') throw fail(409, 'El correo ya está registrado.'); throw e; } }
 async function login(input) {
- const user = await User.findOne({ where: { email: input.email } });
+ const user = await User.findOne({ where: { emailHash: blindIndex(input.email) } });
  const now = new Date();
  if (user && user.lockedUntil && user.lockedUntil > now) { await event(user.id, 'login', 'blocked'); throw fail(429, 'Demasiados intentos. Inténtelo más tarde.'); }
  // El hash fijo solo equilibra el trabajo para cuentas inexistentes; no autentica ninguna cuenta.
@@ -25,7 +25,7 @@ async function sendResetEmail(to, url) {
  if (!res.ok) throw Object.assign(new Error('No se pudo enviar el correo'), { code: `BREVO_${res.status}` });
 }
 async function forgot(email) {
- const user = await User.findOne({ where: { email } }); if (!user) return;
+ const user = await User.findOne({ where: { emailHash: blindIndex(email) } }); if (!user) return;
  const token = crypto.randomBytes(32).toString('hex'); await ResetToken.create({ userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + 15 * 60000) });
  const url = new URL('/reset-password', process.env.APP_URL); url.searchParams.set('token', token);
  await sendResetEmail(user.email, url.toString());

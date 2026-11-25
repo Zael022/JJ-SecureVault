@@ -1,6 +1,6 @@
 # J.J — SecureVault
 
-Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQL, Sequelize y migraciones. Producción: frontend en Vercel, API en Render y base de datos en Supabase. Usa sesiones de servidor, dos roles, cifrado autenticado para notas y teléfono, recuperación por correo y una bitácora de seguridad.
+Aplicación universitaria de notas privadas con React + Vite, Express, PostgreSQL, Sequelize y migraciones. Producción: frontend en Vercel, API en Render y base de datos en Supabase. Ningún dato personal se guarda legible en la base: el correo se busca mediante un índice ciego HMAC-SHA256 (`email_hash`). Usa sesiones de servidor, dos roles, cifrado autenticado (AES-256-GCM) para nombre, correo, título y contenido de notas, teléfono y datos de sesión, recuperación por correo y una bitácora de seguridad.
 
 **Estado:** implementación y comprobaciones locales parciales. Migraciones up/down/up y las 5 pruebas (incluida la de integración) pasaron contra PostgreSQL 16 local. Ver `docs/Informe_Seguridad.md` y `docs/Resultados_Verificacion.md` antes de usarla. No usar como producto real hasta completar y revisar esas pruebas.
 
@@ -43,7 +43,7 @@ code backend\.env
 
 Copiá el primer valor en `ENCRYPTION_KEY_BASE64` y el segundo en `SESSION_SECRET`. Completá `DB_PASSWORD` con la contraseña local. `BREVO_API_KEY` puede quedar vacío en desarrollo. No compartás `.env`.
 
-Si se pierde la llave de cifrado, no se pueden recuperar las notas y teléfonos ya cifrados. Resguardá una copia segura fuera del repositorio. Para una futura rotación deben mantenerse temporalmente las llaves antiguas y volver a cifrar los registros con la nueva: esta rotación no está implementada.
+Si se pierde la llave de cifrado, no se pueden recuperar los datos cifrados (nombres, correos, notas, teléfonos) y nadie podrá iniciar sesión, porque el índice del correo también depende de la llave. Resguardá una copia segura fuera del repositorio. Para una futura rotación deben mantenerse temporalmente las llaves antiguas y volver a cifrar los registros con la nueva: esta rotación no está implementada.
 
 ## 4. Instalar y preparar el backend
 

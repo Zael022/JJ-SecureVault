@@ -19,7 +19,7 @@ module.exports = {
  deleteNote: async (req, res) => { await service.deleteNote(req.user.id, req.params.id); ok(res, { message: 'Nota eliminada.' }); },
  profile: async (req, res) => ok(res, { ...service.publicUser(req.user), phone: service.maskedPhone(req.user) }),
  phone: async (req, res) => { await service.setPhone(req.user, req.body.phone); ok(res, { phone: service.maskedPhone(req.user) }); },
- users: async (req, res) => ok(res, (await User.findAll({ attributes: ['id','name','email','role','createdAt'], limit: 200, order: [['createdAt','DESC']] })).map(service.publicUser)),
+ users: async (req, res) => ok(res, (await User.findAll({ attributes: ['id','nameEnc','emailEnc','role','createdAt'], limit: 200, order: [['createdAt','DESC']] })).map(service.publicUser)),
  role: async (req, res) => { const target = await User.findByPk(req.params.id); if (!target) throw service.fail(404, 'Usuario no encontrado.'); if (target.id === req.user.id && req.body.role !== 'administrador') throw service.fail(400, 'No puede retirar su propio rol de administrador.'); const old = target.role; await target.update({ role: req.body.role }); await service.event(req.user.id, 'role_change', 'success', `${target.id}: ${old} → ${target.role}`); ok(res, service.publicUser(target)); },
  events: async (req, res) => ok(res, await SecurityEvent.findAll({ attributes: ['id','userId','eventType','result','details','createdAt'], order: [['createdAt','DESC']], limit: 200 }))
 };
